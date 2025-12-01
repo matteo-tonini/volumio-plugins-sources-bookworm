@@ -236,7 +236,7 @@ async function fetchCdMetadata() {
  *
  * @param {CdTrack[]} items - The original list of CD track items.
  * @param {CdMetadata} meta - The metadata to apply to each track.
- * @param {string} albumart - The URL of the album art image.
+ * @param {string|null} albumart - The URL of the album art image.
  * @returns {CdTrack[]} The decorated list of CD track items.
  */
 function decorateItems(items, meta, albumart) {

@@ -107,6 +107,8 @@ cdplayer.prototype.onStop = function () {
 cdplayer.prototype.onRestart = function () {
   var self = this;
   var defer = libQ.defer();
+  self._items = null;
+  self._discIdentifier = Date.now();
 
   execAsync(`sudo /bin/systemctl restart ${SERVICE_FILE}`)
     .then(() => self.log("Daemon service restarted"))
@@ -236,7 +238,11 @@ cdplayer.prototype.handleBrowseUri = function (curUri) {
       if (meta) {
         // eg. https://coverartarchive.org/release/2174675c-2159-4405-a3af-3a4860106b58/front
         const albumart = await getAlbumartUrl(meta.releaseId);
-        decoratedItems = decorateItems(items, meta, albumart);
+        decoratedItems = decorateItems(
+          items,
+          meta,
+          albumart || DEFAULT_COVERART_URL
+        );
         self.removeToBrowseSources();
         self.addToBrowseSources(albumart || DEFAULT_COVERART_URL);
       } else {
@@ -281,7 +287,6 @@ cdplayer.prototype.handleBrowseUri = function (curUri) {
 cdplayer.prototype.explodeUri = function (uri) {
   const self = this;
   const defer = libQ.defer();
-  self.log(`explodeUri called with uri: ${uri}`);
 
   const match = uri.match(/^cdplayer\/(\d+)(?:\?.*)?$/);
   if (match) {
@@ -367,7 +372,11 @@ function retryFetchMetadata(items, self) {
 
       // If metadata retrieved:
       const albumart = await getAlbumartUrl(meta.releaseId);
-      const decoratedItems = decorateItems(items, meta, albumart);
+      const decoratedItems = decorateItems(
+        items,
+        meta,
+        albumart || DEFAULT_COVERART_URL
+      );
       self.removeToBrowseSources();
       self.addToBrowseSources(albumart || DEFAULT_COVERART_URL);
 
