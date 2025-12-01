@@ -14,8 +14,6 @@ sudo apt-get install -y --no-install-recommends \
   gstreamer1.0-plugins-base \
   gstreamer1.0-plugins-good \
   gstreamer1.0-plugins-ugly \
-  cdparanoia \
-  build-essential
 
 # --- volumio permissions ---
 echo "Configuring permissions"
