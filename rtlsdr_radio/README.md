@@ -8,7 +8,7 @@ Receive FM and DAB/DAB+ radio using RTL-SDR USB tuners.
 - Compatible with R820T, R820T2, R828D, E4000 tuners
 - Quality dongles recommended: Nooelec NESDR Smart, RTL-SDR Blog V3/V4
 - Cheap generic blue dongles work but may require PPM frequency correction for DAB
-- Antenna suitable for FM (88-108 MHz) and/or DAB Band III (174-240 MHz)
+- Antenna suitable for FM (76-108 MHz depending on region) and/or DAB Band III (174-240 MHz)
 
 ## Supported Platforms
 
@@ -19,7 +19,7 @@ Receive FM and DAB/DAB+ radio using RTL-SDR USB tuners.
 ## Features
 
 ### Radio Reception
-- FM radio reception (87.5-108 MHz)
+- FM radio reception (76-108 MHz, configurable lower bound for regional bands)
 - DAB and DAB+ digital radio
 - Automatic station scanning with configurable sensitivity
 - Integrated with Volumio's playback system
@@ -35,6 +35,7 @@ Receive FM and DAB/DAB+ radio using RTL-SDR USB tuners.
 - Recycle bin for deleted stations (recoverable)
 - Per-row save buttons for quick edits
 - Bulk operations (clear all, rescan)
+- CSV import/export for offline editing
 
 ### Multilingual Support
 The plugin fully supports internationalization with automatic language detection:
@@ -90,6 +91,54 @@ The plugin includes a comprehensive backup and restore system to protect your co
 
 **Auto-Backup:**
 Enable "Automatic backup before uninstall" checkbox to automatically create a full backup when uninstalling the plugin. Backups are preserved even after uninstall.
+
+### CSV Import/Export
+
+Edit your stations offline using standard CSV files. Useful for bulk editing, sharing station lists between systems, or pre-configuring before hardware arrives.
+
+**Features:**
+- Download FM and DAB templates with headers and example data
+- Export existing stations with timestamps
+- Four import operations for flexible station management
+- Validation before import with detailed error reporting
+- Respects regional FM frequency settings
+
+**Import Operations:**
+
+| Operation | Description |
+|-----------|-------------|
+| Replace | Clear all stations of type and import fresh from CSV |
+| Amend | Update existing stations, preserve play history |
+| Extend | Add new stations only, skip duplicates |
+| Remove | Mark matching stations as deleted |
+
+**CSV Format:**
+
+FM stations:
+```csv
+frequency,name,customName,favorite,hidden,notes
+94.9,BBC Radio London,My BBC,true,false,Optional notes
+```
+
+DAB stations:
+```csv
+channel,exactName,name,customName,ensemble,serviceId,favorite,hidden,notes
+12C,BBC Radio 1,BBC Radio 1,,London 1,0,true,false,Optional notes
+```
+
+**Usage:**
+1. Open web station manager
+2. Click "Maintenance" tab
+3. Scroll to "Import / Export Stations" section
+4. Download template or export existing stations
+5. Edit CSV in spreadsheet application
+6. Upload, validate, select operation, and import
+
+**Notes:**
+- DAB `exactName` must match exactly (including trailing spaces)
+- FM frequency range respects your regional setting (Japan 76MHz, Italy 87MHz, etc.)
+- Validation shows line-by-line errors before import
+- AMEND preserves playCount, lastPlayed, and dateAdded fields
 
 ### Best Effort Artwork
 
@@ -362,9 +411,52 @@ GPL-3.0
 
 Just a Nerd
 
+## Credits
+
+- Wheaten - SNR measurement algorithm (snrd-api_V2.sh), adapted for gain optimizer tool
+
 ## Version History
 
-### v1.3.1 (Current)
+### v1.3.5 (Current)
+- Complete SNR Measurement Tool implementation
+  - Fixed NaN handling for single channel measurements
+  - Added guidance text explaining how to apply recommended gain value
+  - Added note for RTL-SDR Blog V4 (R828D) users to extend range to 70
+  - Updated default gain range to 0-50 (standard dongles max ~49.6 dB)
+  - Full internationalization for all 11 languages
+- Gain range maximum extended to 100 for V4/extended hardware testing
+
+### v1.3.4
+- SNR Measurement Tool (Tool 3) in Antenna Positioning tab
+  - Based on snrd-api_V2.sh by Wheaten
+  - Measures Signal-to-Noise Ratio across gain settings
+  - Auto-detects channels from scanned stations or validation results
+  - Recommends optimal gain for best signal quality
+  - Configurable gain range and step size
+- Fixed blocklist backup restore validation (regression from v1.3.3)
+
+### v1.3.3
+- CSV import/export for offline station editing
+- Download FM and DAB station templates
+- Export existing stations to CSV with timestamps
+- Import with four operations:
+  - Replace: Clear all stations and import fresh
+  - Amend: Update existing stations, preserve play history
+  - Extend: Add new stations only, skip duplicates
+  - Remove: Mark matching stations as deleted
+- Validation before import with detailed error reporting
+- Respects regional FM frequency settings (Japan 76MHz, Italy 87MHz, etc.)
+
+### v1.3.2
+- Configurable FM lower frequency for regional band support
+- Japan: 76.0 MHz lower bound (76-95 MHz band)
+- Italy: 87.0 MHz lower bound (RAI Radio 1 at 87.1 MHz)
+- Europe: 87.5 MHz (default)
+- Americas: 88.0 MHz
+- Setting in FM Radio configuration section
+- FM scan automatically uses configured range
+
+### v1.3.1
 - Classical music artwork via Open Opus API fallback
 - When Last.fm has no artwork for classical composers, displays composer portrait
 - Recognizes 150+ classical composers (Bach, Beethoven, Mozart, etc.)

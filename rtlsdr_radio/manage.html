@@ -959,6 +959,92 @@
       margin: 0;
     }
     
+    /* CSV Import/Export Section */
+    .csv-section-header {
+      color: #54b948;
+      font-size: 16px;
+      margin: 25px 0 15px 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #404040;
+    }
+    
+    .csv-section-header:first-of-type {
+      margin-top: 0;
+    }
+    
+    .csv-operation-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .csv-operation-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 10px;
+      background: #333;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .csv-operation-item:hover {
+      background: #3a3a3a;
+    }
+    
+    .csv-operation-item input[type="radio"] {
+      margin-top: 3px;
+    }
+    
+    .csv-operation-label {
+      font-size: 13px;
+      color: #e0e0e0;
+    }
+    
+    .csv-operation-desc {
+      font-size: 11px;
+      color: #888;
+      margin-top: 2px;
+    }
+    
+    #csv-validation-results {
+      display: none;
+      background: #333;
+      border-radius: 4px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+    
+    #csv-validation-results.visible {
+      display: block;
+    }
+    
+    #csv-validation-results.has-errors {
+      border-left: 3px solid #e74c3c;
+    }
+    
+    #csv-validation-results.valid {
+      border-left: 3px solid #54b948;
+    }
+    
+    .csv-error-list {
+      margin: 10px 0 0 0;
+      padding-left: 20px;
+      color: #e74c3c;
+      font-size: 12px;
+    }
+    
+    .csv-error-list li {
+      margin: 5px 0;
+    }
+    
+    @media (max-width: 768px) {
+      .csv-operation-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
     .restore-label {
       display: block;
       margin-bottom: 5px;
@@ -1231,6 +1317,96 @@
     .channel-result-text {
       min-width: 120px;
       color: #ccc;
+    }
+    
+    /* SNR Measurement Tool styles */
+    .snr-config {
+      background: #1c1c1c;
+      border: 1px solid #404040;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .snr-config-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .snr-config-row label {
+      color: #54b948;
+      font-weight: bold;
+      min-width: 80px;
+    }
+    
+    .snr-config-row select,
+    .snr-config-row input[type="number"] {
+      background: #282828;
+      border: 1px solid #404040;
+      border-radius: 4px;
+      color: #e0e0e0;
+      padding: 6px 10px;
+    }
+    
+    .snr-config-row span {
+      color: #999;
+    }
+    
+    .snr-results {
+      background: #1c1c1c;
+      border: 1px solid #404040;
+      border-radius: 4px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+    
+    .snr-best-gain {
+      background: #282828;
+      border: 2px solid #54b948;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 15px;
+      text-align: center;
+      font-size: 16px;
+    }
+    
+    .snr-best-gain strong {
+      color: #54b948;
+      font-size: 24px;
+    }
+    
+    .snr-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    
+    .snr-table th,
+    .snr-table td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid #404040;
+    }
+    
+    .snr-table th {
+      background: #282828;
+      color: #54b948;
+      font-weight: bold;
+    }
+    
+    .snr-table td {
+      color: #e0e0e0;
+    }
+    
+    .snr-table tr:hover td {
+      background: #282828;
+    }
+    
+    .snr-table tr.best-row td {
+      background: rgba(84, 185, 72, 0.2);
+      font-weight: bold;
     }
     
     .workflow-guide {
@@ -1531,6 +1707,100 @@
         <tbody id="backup-history-body"></tbody>
       </table>
     </div>
+    
+    <!-- CSV Import/Export Section -->
+    <div class="tab-header" style="margin-top: 30px;">
+      <div class="flex-1">
+        <h2 class="maintenance-header" id="csv-section-title">Import / Export Stations</h2>
+      </div>
+    </div>
+    
+    <div class="backup-section">
+      <div class="csv-section-header" id="csv-export-header">Export</div>
+      <p style="color: #888; font-size: 13px; margin-bottom: 15px;" id="csv-export-desc">Download your stations as CSV files for backup or editing.</p>
+      <div class="tab-header tab-header-no-margin" style="margin-bottom: 20px;">
+        <button class="btn btn-secondary" onclick="exportCsv('fm')">
+          <i class="fa fa-download"></i>
+          <span id="btn-export-fm">FM Stations</span>
+        </button>
+        <button class="btn btn-secondary" onclick="exportCsv('dab')">
+          <i class="fa fa-download"></i>
+          <span id="btn-export-dab">DAB Stations</span>
+        </button>
+      </div>
+      
+      <div class="csv-section-header" id="csv-templates-header">Templates</div>
+      <p style="color: #888; font-size: 13px; margin-bottom: 15px;" id="csv-templates-desc">Download empty templates to create new station lists.</p>
+      <div class="tab-header tab-header-no-margin" style="margin-bottom: 20px;">
+        <button class="btn btn-secondary" onclick="downloadCsvTemplate('fm')">
+          <i class="fa fa-file-text-o"></i>
+          <span id="btn-template-fm">FM Template</span>
+        </button>
+        <button class="btn btn-secondary" onclick="downloadCsvTemplate('dab')">
+          <i class="fa fa-file-text-o"></i>
+          <span id="btn-template-dab">DAB Template</span>
+        </button>
+      </div>
+      
+      <div class="csv-section-header" id="csv-import-header">Import</div>
+      <p style="color: #888; font-size: 13px; margin-bottom: 15px;" id="csv-import-desc">Upload a CSV file to add or update stations.</p>
+      
+      <input type="file" id="csv-file-input" accept=".csv" class="file-input-hidden" onchange="csvFileSelected()">
+      <div class="tab-header tab-header-no-margin" style="margin-bottom: 15px;">
+        <button class="btn btn-secondary" onclick="document.getElementById('csv-file-input').click()">
+          <i class="fa fa-folder-open"></i>
+          <span id="btn-csv-choose">Choose File</span>
+        </button>
+        <span id="csv-filename" class="upload-filename" style="color: #888;"></span>
+      </div>
+      
+      <p style="color: #888; font-size: 13px; margin-bottom: 10px;" id="csv-operation-label">Import Operation:</p>
+      <div class="csv-operation-grid">
+        <label class="csv-operation-item">
+          <input type="radio" name="csv-operation" value="replace">
+          <div>
+            <div class="csv-operation-label" id="csv-op-replace">Replace</div>
+            <div class="csv-operation-desc" id="csv-op-replace-desc">Clear existing stations and import all from CSV</div>
+          </div>
+        </label>
+        <label class="csv-operation-item">
+          <input type="radio" name="csv-operation" value="amend">
+          <div>
+            <div class="csv-operation-label" id="csv-op-amend">Amend</div>
+            <div class="csv-operation-desc" id="csv-op-amend-desc">Update matching stations, keep others unchanged</div>
+          </div>
+        </label>
+        <label class="csv-operation-item">
+          <input type="radio" name="csv-operation" value="extend" checked>
+          <div>
+            <div class="csv-operation-label" id="csv-op-extend">Extend</div>
+            <div class="csv-operation-desc" id="csv-op-extend-desc">Add new stations only, skip duplicates</div>
+          </div>
+        </label>
+        <label class="csv-operation-item">
+          <input type="radio" name="csv-operation" value="remove">
+          <div>
+            <div class="csv-operation-label" id="csv-op-remove">Remove</div>
+            <div class="csv-operation-desc" id="csv-op-remove-desc">Delete stations that match CSV entries</div>
+          </div>
+        </label>
+      </div>
+      
+      <div class="tab-header tab-header-no-margin">
+        <button class="btn btn-secondary" id="btn-csv-validate" onclick="validateCsv()" disabled>
+          <i class="fa fa-check-circle"></i>
+          <span id="btn-csv-validate-text">Validate</span>
+        </button>
+        <button class="btn btn-primary" id="btn-csv-import" onclick="importCsv()" disabled>
+          <i class="fa fa-upload"></i>
+          <span id="btn-csv-import-text">Import Stations</span>
+        </button>
+      </div>
+      
+      <div id="csv-validation-results">
+        <div id="csv-validation-content"></div>
+      </div>
+    </div>
   </div>
   
     <div id="antenna-tab" class="tab-content">
@@ -1631,6 +1901,125 @@
         </div>
         
         <div id="channel-results" class="channel-results"></div>
+      </div>
+      
+      <!-- Tool 3: SNR Measurement -->
+      <div class="antenna-tool-section">
+        <h4 id="tool-snr-title">Tool 3: SNR Measurement (Gain Optimizer)</h4>
+        <div class="antenna-tool-box">
+          <p><strong id="snr-what">What it shows:</strong> <span id="snr-what-desc">Signal-to-Noise Ratio for each channel across different gain settings</span></p>
+          <p><strong id="snr-use">Use when:</strong> <span id="snr-use-desc">Finding optimal gain setting for your location and antenna setup</span></p>
+          <p><strong id="snr-speed">Speed:</strong> <span id="snr-speed-desc">2-3 seconds per gain step (total time depends on gain range)</span></p>
+          <p><strong id="snr-advantage">Advantage:</strong> <span id="snr-advantage-desc">Automatically determines best gain for maximum signal quality</span></p>
+        </div>
+        
+        <div class="snr-config">
+          <div class="snr-config-row">
+            <label id="snr-channels-label">Channels:</label>
+            <select id="snr-channel-source" onchange="updateSnrChannelSource()">
+              <option value="scanned" id="snr-source-scanned">Use scanned DAB stations</option>
+              <option value="validated" id="snr-source-validated">Use validated channels (from Tool 2)</option>
+              <option value="manual" id="snr-source-manual">Select manually</option>
+            </select>
+          </div>
+          <div id="snr-manual-channels" class="channel-grid" style="display: none; margin-top: 10px;">
+            <label><input type="checkbox" class="snr-channel-checkbox" value="5A"> 5A</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="5B"> 5B</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="5C"> 5C</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="5D"> 5D</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="6A"> 6A</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="6B"> 6B</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="6C"> 6C</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="6D"> 6D</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="7A"> 7A</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="7B"> 7B</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="7C"> 7C</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="7D"> 7D</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="8A"> 8A</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="8B"> 8B</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="8C"> 8C</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="8D"> 8D</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="9A"> 9A</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="9B"> 9B</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="9C"> 9C</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="9D"> 9D</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="10A"> 10A</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="10B"> 10B</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="10C"> 10C</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="10D"> 10D</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="11A"> 11A</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="11B"> 11B</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="11C"> 11C</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="11D"> 11D</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="12A"> 12A</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="12B"> 12B</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="12C"> 12C</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="12D"> 12D</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="13A"> 13A</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="13B"> 13B</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="13C"> 13C</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="13D"> 13D</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="13E"> 13E</label>
+            <label><input type="checkbox" class="snr-channel-checkbox" value="13F"> 13F</label>
+          </div>
+          <div class="snr-config-row" style="margin-top: 10px;">
+            <label id="snr-gain-label">Gain range:</label>
+            <input type="number" id="snr-gain-start" value="0" min="-10" max="100" style="width: 60px;"> 
+            <span>to</span>
+            <input type="number" id="snr-gain-stop" value="50" min="-10" max="100" style="width: 60px;">
+            <span id="snr-step-label">step</span>
+            <input type="number" id="snr-gain-step" value="5" min="1" max="20" style="width: 50px;">
+          </div>
+          <div style="margin-top: 5px; font-size: 12px; color: #888;">
+            <span id="snr-gain-note">RTL-SDR Blog V4 (R828D): extend range to 70 for optimal results</span>
+          </div>
+        </div>
+        
+        <div class="tab-header tab-header-no-margin">
+          <button class="btn btn-primary" onclick="runSnrScan()">
+            <i class="fa fa-sliders"></i>
+            <span id="btn-snr-scan">Measure SNR</span>
+          </button>
+          <span class="scan-status" id="snr-status"></span>
+        </div>
+        
+        <div id="snr-results" class="snr-results" style="display: none;">
+          <div id="snr-best-gain" class="snr-best-gain"></div>
+          <div id="snr-guidance" style="margin: 10px 0; padding: 10px; background: #2a2a2a; border-radius: 4px; font-size: 13px;">
+            <span id="snr-guidance-text">Apply this value to DAB Gain in the plugin settings for optimal signal reception. The same value may work for FM Gain too.</span>
+          </div>
+          <table id="snr-summary-table" class="snr-table">
+            <thead>
+              <tr>
+                <th id="snr-th-gain">Gain</th>
+                <th id="snr-th-min">Min SNR</th>
+                <th id="snr-th-max">Max SNR</th>
+                <th id="snr-th-avg">Avg SNR</th>
+              </tr>
+            </thead>
+            <tbody id="snr-summary-body"></tbody>
+          </table>
+          <div id="snr-details-toggle" style="margin-top: 10px;">
+            <button class="btn btn-secondary" onclick="toggleSnrDetails()">
+              <i class="fa fa-list"></i>
+              <span id="btn-snr-details">Show Details</span>
+            </button>
+          </div>
+          <div id="snr-details" style="display: none; margin-top: 10px;">
+            <table class="snr-table">
+              <thead>
+                <tr>
+                  <th id="snr-detail-th-gain">Gain</th>
+                  <th id="snr-detail-th-channel">Channel</th>
+                  <th id="snr-detail-th-peak">Peak (dB)</th>
+                  <th id="snr-detail-th-noise">Noise (dB)</th>
+                  <th id="snr-detail-th-snr">SNR (dB)</th>
+                </tr>
+              </thead>
+              <tbody id="snr-details-body"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
       
       <!-- Workflow Guide -->
@@ -2030,6 +2419,32 @@
       document.getElementById('th-download').textContent = t('TH_DOWNLOAD');
       document.getElementById('th-delete').textContent = t('TH_DELETE');
       
+      // CSV Import/Export translations
+      document.getElementById('csv-section-title').textContent = t('CSV_IMPORT_EXPORT');
+      document.getElementById('csv-export-header').textContent = t('CSV_EXPORT_TITLE');
+      document.getElementById('csv-export-desc').textContent = t('CSV_EXPORT_DESC');
+      document.getElementById('btn-export-fm').textContent = t('CSV_EXPORT_FM');
+      document.getElementById('btn-export-dab').textContent = t('CSV_EXPORT_DAB');
+      document.getElementById('csv-templates-header').textContent = t('CSV_TEMPLATES_TITLE');
+      document.getElementById('csv-templates-desc').textContent = t('CSV_TEMPLATES_DESC');
+      document.getElementById('btn-template-fm').textContent = t('CSV_TEMPLATE_FM');
+      document.getElementById('btn-template-dab').textContent = t('CSV_TEMPLATE_DAB');
+      document.getElementById('csv-import-header').textContent = t('CSV_IMPORT_TITLE');
+      document.getElementById('csv-import-desc').textContent = t('CSV_IMPORT_DESC');
+      document.getElementById('btn-csv-choose').textContent = t('CSV_CHOOSE_FILE');
+      document.getElementById('csv-filename').textContent = t('CSV_NO_FILE');
+      document.getElementById('csv-operation-label').textContent = t('CSV_OPERATION') + ':';
+      document.getElementById('csv-op-replace').textContent = t('CSV_OP_REPLACE');
+      document.getElementById('csv-op-replace-desc').textContent = t('CSV_OP_REPLACE_DESC');
+      document.getElementById('csv-op-amend').textContent = t('CSV_OP_AMEND');
+      document.getElementById('csv-op-amend-desc').textContent = t('CSV_OP_AMEND_DESC');
+      document.getElementById('csv-op-extend').textContent = t('CSV_OP_EXTEND');
+      document.getElementById('csv-op-extend-desc').textContent = t('CSV_OP_EXTEND_DESC');
+      document.getElementById('csv-op-remove').textContent = t('CSV_OP_REMOVE');
+      document.getElementById('csv-op-remove-desc').textContent = t('CSV_OP_REMOVE_DESC');
+      document.getElementById('btn-csv-validate-text').textContent = t('CSV_VALIDATE');
+      document.getElementById('btn-csv-import-text').textContent = t('CSV_IMPORT_BTN');
+      
       // Antenna Alignment tab translations
       document.getElementById('tab-antenna').textContent = t('TAB_ANTENNA');
       document.getElementById('antenna-header').textContent = t('ANTENNA_HEADER');
@@ -2059,6 +2474,36 @@
       document.getElementById('validation-advantage-desc').textContent = t('VALIDATION_ADVANTAGE_DESC');
       document.getElementById('channels-label').textContent = t('CHANNELS_LABEL');
       document.getElementById('btn-validate-channels').textContent = t('BTN_VALIDATE_CHANNELS');
+      
+      // Tool 3: SNR Measurement
+      document.getElementById('tool-snr-title').textContent = t('TOOL_SNR_TITLE');
+      document.getElementById('snr-what').textContent = t('SNR_WHAT');
+      document.getElementById('snr-what-desc').textContent = t('SNR_WHAT_DESC');
+      document.getElementById('snr-use').textContent = t('SNR_USE');
+      document.getElementById('snr-use-desc').textContent = t('SNR_USE_DESC');
+      document.getElementById('snr-speed').textContent = t('SNR_SPEED');
+      document.getElementById('snr-speed-desc').textContent = t('SNR_SPEED_DESC');
+      document.getElementById('snr-advantage').textContent = t('SNR_ADVANTAGE');
+      document.getElementById('snr-advantage-desc').textContent = t('SNR_ADVANTAGE_DESC');
+      document.getElementById('snr-channels-label').textContent = t('SNR_CHANNELS_LABEL');
+      document.getElementById('snr-source-scanned').textContent = t('SNR_SOURCE_SCANNED');
+      document.getElementById('snr-source-validated').textContent = t('SNR_SOURCE_VALIDATED');
+      document.getElementById('snr-source-manual').textContent = t('SNR_SOURCE_MANUAL');
+      document.getElementById('snr-gain-label').textContent = t('SNR_GAIN_LABEL');
+      document.getElementById('snr-step-label').textContent = t('SNR_STEP_LABEL');
+      document.getElementById('btn-snr-scan').textContent = t('BTN_SNR_SCAN');
+      document.getElementById('snr-th-gain').textContent = t('SNR_TH_GAIN');
+      document.getElementById('snr-th-min').textContent = t('SNR_TH_MIN');
+      document.getElementById('snr-th-max').textContent = t('SNR_TH_MAX');
+      document.getElementById('snr-th-avg').textContent = t('SNR_TH_AVG');
+      document.getElementById('btn-snr-details').textContent = t('SNR_SHOW_DETAILS');
+      document.getElementById('snr-detail-th-gain').textContent = t('SNR_TH_GAIN');
+      document.getElementById('snr-detail-th-channel').textContent = t('SNR_TH_CHANNEL');
+      document.getElementById('snr-detail-th-peak').textContent = t('SNR_TH_PEAK');
+      document.getElementById('snr-detail-th-noise').textContent = t('SNR_TH_NOISE');
+      document.getElementById('snr-detail-th-snr').textContent = t('SNR_TH_SNR');
+      document.getElementById('snr-guidance-text').textContent = t('SNR_GUIDANCE');
+      document.getElementById('snr-gain-note').textContent = t('SNR_GAIN_NOTE');
       
       // Antenna Alignment Workflow
       document.getElementById('workflow-title').textContent = t('WORKFLOW_TITLE');
@@ -2192,7 +2637,7 @@
         
         let frequencyHtml = '';
         if (type === 'fm') {
-          frequencyHtml = '<input type="number" class="frequency-input" value="' + station.frequency + '" min="87.5" max="108.0" step="0.1" data-type="fm" data-index="' + realIdx + '" data-original="' + station.frequency + '" title="' + t('LABEL_FREQUENCY') + '">';
+          frequencyHtml = '<input type="number" class="frequency-input" value="' + station.frequency + '" min="76.0" max="108.0" step="0.1" data-type="fm" data-index="' + realIdx + '" data-original="' + station.frequency + '" title="' + t('LABEL_FREQUENCY') + '">';
         } else {
           frequencyHtml = '<span class="frequency-display">' + (station.channelName || '') + '</span>';
         }
@@ -2331,7 +2776,7 @@
           
           if (newFreq === oldFreq) return;
           
-          if (newFreq < 87.5 || newFreq > 108.0 || isNaN(newFreq)) {
+          if (newFreq < 76.0 || newFreq > 108.0 || isNaN(newFreq)) {
             showToast(t('WARN_FREQ_INVALID'), 'error');
             e.target.value = oldFreq;
             e.target.classList.add('error');
@@ -3202,6 +3647,175 @@
       .catch(err => showToast(t('TOAST_RESTORE_FAILED_MSG') + ': ' + err.message, 'error'));
     }
     
+    // ========== CSV IMPORT/EXPORT FUNCTIONS ==========
+    
+    function downloadCsvTemplate(type) {
+      window.location.href = '/api/csv/template/' + type;
+    }
+    
+    function exportCsv(type) {
+      window.location.href = '/api/csv/export/' + type;
+    }
+    
+    function csvFileSelected() {
+      var fileInput = document.getElementById('csv-file-input');
+      var filenameSpan = document.getElementById('csv-filename');
+      var validateBtn = document.getElementById('btn-csv-validate');
+      var importBtn = document.getElementById('btn-csv-import');
+      
+      if (fileInput.files.length > 0) {
+        filenameSpan.textContent = fileInput.files[0].name;
+        filenameSpan.style.color = '#e0e0e0';
+        validateBtn.disabled = false;
+        importBtn.disabled = true;  // Require validation first
+        hideCsvValidationResults();
+      } else {
+        filenameSpan.textContent = t('CSV_NO_FILE');
+        filenameSpan.style.color = '#888';
+        validateBtn.disabled = true;
+        importBtn.disabled = true;
+      }
+    }
+    
+    async function validateCsv() {
+      var fileInput = document.getElementById('csv-file-input');
+      if (!fileInput.files.length) {
+        showToast(t('CSV_NO_FILE_SELECTED'), 'warning');
+        return;
+      }
+      
+      var formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      
+      try {
+        var response = await fetch('/api/csv/validate', {
+          method: 'POST',
+          body: formData
+        });
+        
+        var result = await response.json();
+        
+        if (response.ok) {
+          displayCsvValidationResults(result);
+          
+          // Enable import button only if validation passed
+          document.getElementById('btn-csv-import').disabled = !result.valid;
+        } else {
+          showCsvValidationError(result.error || 'Validation failed');
+        }
+      } catch (error) {
+        showCsvValidationError(error.message);
+      }
+    }
+    
+    function displayCsvValidationResults(result) {
+      var box = document.getElementById('csv-validation-results');
+      var content = document.getElementById('csv-validation-content');
+      
+      var html = '<p><strong>' + t('CSV_VALIDATION_FILE') + ':</strong> ' + escapeCsvHtml(result.filename) + '</p>';
+      html += '<p><strong>' + t('CSV_VALIDATION_TYPE') + ':</strong> ' + result.type.toUpperCase() + '</p>';
+      html += '<p><strong>' + t('CSV_VALIDATION_VALID') + ':</strong> ' + result.validCount + ' / ' + result.totalRows + '</p>';
+      
+      if (result.errors.length > 0) {
+        html += '<p><strong>' + t('CSV_VALIDATION_ERRORS') + ':</strong> ' + result.errors.length + '</p>';
+        html += '<ul class="csv-error-list">';
+        result.errors.forEach(function(err) {
+          html += '<li>Row ' + err.line + ': ' + escapeCsvHtml(err.message) + '</li>';
+        });
+        html += '</ul>';
+        box.classList.add('has-errors');
+        box.classList.remove('valid');
+      } else {
+        html += '<p style="color: #54b948;">' + t('CSV_VALIDATION_PASSED') + '</p>';
+        box.classList.remove('has-errors');
+        box.classList.add('valid');
+      }
+      
+      content.innerHTML = html;
+      box.classList.add('visible');
+    }
+    
+    function showCsvValidationError(message) {
+      var box = document.getElementById('csv-validation-results');
+      var content = document.getElementById('csv-validation-content');
+      
+      content.innerHTML = '<p style="color: #e74c3c;">' + escapeCsvHtml(message) + '</p>';
+      box.classList.add('visible', 'has-errors');
+      box.classList.remove('valid');
+    }
+    
+    function hideCsvValidationResults() {
+      var box = document.getElementById('csv-validation-results');
+      box.classList.remove('visible', 'has-errors', 'valid');
+    }
+    
+    async function importCsv() {
+      var fileInput = document.getElementById('csv-file-input');
+      if (!fileInput.files.length) {
+        showToast(t('CSV_NO_FILE_SELECTED'), 'warning');
+        return;
+      }
+      
+      var operation = document.querySelector('input[name="csv-operation"]:checked').value;
+      
+      // Confirm destructive operations
+      if (operation === 'replace') {
+        var confirmed = await showConfirmModal(
+          t('CSV_CONFIRM_REPLACE'),
+          t('CSV_OP_REPLACE_DESC'),
+          'warning'
+        );
+        if (!confirmed) return;
+      } else if (operation === 'remove') {
+        var confirmed = await showConfirmModal(
+          t('CSV_CONFIRM_REMOVE'),
+          t('CSV_OP_REMOVE_DESC'),
+          'warning'
+        );
+        if (!confirmed) return;
+      }
+      
+      var formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      formData.append('operation', operation);
+      
+      try {
+        var response = await fetch('/api/csv/import', {
+          method: 'POST',
+          body: formData
+        });
+        
+        var result = await response.json();
+        
+        if (result.success) {
+          var msg = t('CSV_IMPORT_SUCCESS') + ': ';
+          var parts = [];
+          if (result.imported > 0) parts.push(result.imported + ' imported');
+          if (result.updated > 0) parts.push(result.updated + ' updated');
+          if (result.removed > 0) parts.push(result.removed + ' removed');
+          if (result.skipped > 0) parts.push(result.skipped + ' skipped');
+          msg += parts.join(', ');
+          
+          showToast(msg, 'success');
+          loadStations();  // Refresh station list
+          
+          // Reset file input
+          fileInput.value = '';
+          csvFileSelected();
+        } else {
+          showToast(t('CSV_IMPORT_FAILED') + ': ' + (result.error || 'Unknown error'), 'error');
+        }
+      } catch (error) {
+        showToast(t('CSV_IMPORT_FAILED') + ': ' + error.message, 'error');
+      }
+    }
+    
+    function escapeCsvHtml(text) {
+      var div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
     // Signal quality polling
     function startSignalPolling() {
       // Clear any existing interval
@@ -3742,6 +4356,262 @@
       
       resultsEl.appendChild(div);
     });
+  }
+  
+  // ===== SNR MEASUREMENT TOOL FUNCTIONS =====
+  
+  // Store validated channels for SNR tool
+  var validatedChannels = [];
+  var snrMeasurements = [];
+  
+  function updateSnrChannelSource() {
+    const source = document.getElementById('snr-channel-source').value;
+    const manualGrid = document.getElementById('snr-manual-channels');
+    
+    if (source === 'manual') {
+      manualGrid.style.display = 'grid';
+    } else {
+      manualGrid.style.display = 'none';
+    }
+  }
+  
+  function getSnrChannels() {
+    const source = document.getElementById('snr-channel-source').value;
+    
+    if (source === 'manual') {
+      const checkboxes = document.querySelectorAll('.snr-channel-checkbox:checked');
+      return Array.from(checkboxes).map(cb => cb.value);
+    } else if (source === 'validated') {
+      // Get channels from validation results
+      const resultsEl = document.getElementById('channel-results');
+      const results = resultsEl.querySelectorAll('.channel-result');
+      const channels = [];
+      results.forEach(r => {
+        const name = r.querySelector('.channel-result-name');
+        const fill = r.querySelector('.channel-result-fill');
+        // Only include channels that were detected (not 'none' or 'error')
+        if (name && fill && !fill.classList.contains('none') && !fill.classList.contains('error')) {
+          channels.push(name.textContent);
+        }
+      });
+      return channels;
+    } else {
+      // Use scanned stations - get unique channels from DAB stations
+      return getScannedDabChannels();
+    }
+  }
+  
+  function getScannedDabChannels() {
+    // Extract unique channels from loaded DAB stations
+    const channels = new Set();
+    if (typeof dabStations !== 'undefined' && dabStations.length > 0) {
+      dabStations.forEach(s => {
+        if (s.channel && !s.deleted) {
+          channels.add(s.channel.toUpperCase());
+        }
+      });
+    }
+    return Array.from(channels).sort();
+  }
+  
+  function runSnrScan() {
+    const channels = getSnrChannels();
+    
+    if (channels.length === 0) {
+      const source = document.getElementById('snr-channel-source').value;
+      if (source === 'scanned') {
+        showToast(t('SNR_NO_SCANNED_CHANNELS') || 'No scanned DAB channels found. Run a DAB scan first.', 'warning');
+      } else if (source === 'validated') {
+        showToast(t('SNR_NO_VALIDATED_CHANNELS') || 'No validated channels found. Run Channel Validation (Tool 2) first.', 'warning');
+      } else {
+        showToast(t('SELECT_CHANNELS') || 'Please select channels', 'warning');
+      }
+      return;
+    }
+    
+    const gainStart = parseInt(document.getElementById('snr-gain-start').value, 10);
+    const gainStop = parseInt(document.getElementById('snr-gain-stop').value, 10);
+    const gainStep = parseInt(document.getElementById('snr-gain-step').value, 10);
+    
+    if (gainStart > gainStop) {
+      showToast(t('SNR_INVALID_RANGE') || 'Invalid gain range', 'warning');
+      return;
+    }
+    
+    const statusEl = document.getElementById('snr-status');
+    const resultsEl = document.getElementById('snr-results');
+    const btn = document.querySelector('button[onclick="runSnrScan()"]');
+    
+    if (btn) btn.disabled = true;
+    resultsEl.style.display = 'none';
+    snrMeasurements = [];
+    
+    const totalSteps = Math.floor((gainStop - gainStart) / gainStep) + 1;
+    const startTime = Date.now();
+    let currentStep = 0;
+    
+    statusEl.textContent = t('SNR_SCANNING') || 'Measuring SNR... (0/' + totalSteps + ')';
+    statusEl.style.color = '#f39c12';
+    
+    const timerInterval = setInterval(function() {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      statusEl.textContent = (t('SNR_SCANNING') || 'Measuring SNR...') + ' (' + currentStep + '/' + totalSteps + ') ' + elapsed + 's';
+    }, 1000);
+    
+    fetch('/api/antenna/snr-scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        channels: channels,
+        gainStart: gainStart,
+        gainStop: gainStop,
+        gainStep: gainStep,
+        integration: 2
+      })
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status);
+      }
+      
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      
+      function processChunk() {
+        reader.read().then(({ done, value }) => {
+          if (done) {
+            clearInterval(timerInterval);
+            if (btn) btn.disabled = false;
+            return;
+          }
+          
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+          
+          lines.forEach(line => {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.substring(6));
+                
+                if (data.status === 'started') {
+                  // Initial message
+                } else if (data.status === 'progress') {
+                  currentStep = data.progress;
+                  // Collect measurements
+                  if (data.results) {
+                    data.results.forEach(r => snrMeasurements.push(r));
+                  }
+                } else if (data.status === 'complete') {
+                  clearInterval(timerInterval);
+                  if (btn) btn.disabled = false;
+                  
+                  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                  statusEl.textContent = (t('SNR_COMPLETE') || 'SNR measurement complete') + ' (' + elapsed + 's)';
+                  statusEl.style.color = '#54b948';
+                  
+                  displaySnrResults(data);
+                  showToast((t('SNR_COMPLETE') || 'SNR measurement complete') + ' (' + elapsed + 's)', 'success');
+                } else if (data.status === 'error') {
+                  clearInterval(timerInterval);
+                  if (btn) btn.disabled = false;
+                  statusEl.textContent = t('SNR_FAILED') || 'SNR measurement failed';
+                  statusEl.style.color = '#e74c3c';
+                  showToast((t('SNR_FAILED') || 'SNR measurement failed') + ': ' + data.error, 'error');
+                }
+              } catch (e) {
+                console.error('Failed to parse SNR SSE data:', e);
+              }
+            }
+          });
+          
+          processChunk();
+        }).catch(err => {
+          clearInterval(timerInterval);
+          if (btn) btn.disabled = false;
+          statusEl.textContent = t('SNR_FAILED') || 'SNR measurement failed';
+          statusEl.style.color = '#e74c3c';
+          showToast((t('SNR_FAILED') || 'SNR measurement failed') + ': ' + err.toString(), 'error');
+        });
+      }
+      
+      processChunk();
+    })
+    .catch(err => {
+      clearInterval(timerInterval);
+      if (btn) btn.disabled = false;
+      statusEl.textContent = t('SNR_FAILED') || 'SNR measurement failed';
+      statusEl.style.color = '#e74c3c';
+      showToast((t('SNR_FAILED') || 'SNR measurement failed') + ': ' + err.toString(), 'error');
+    });
+  }
+  
+  function displaySnrResults(data) {
+    const resultsEl = document.getElementById('snr-results');
+    const bestGainEl = document.getElementById('snr-best-gain');
+    const summaryBody = document.getElementById('snr-summary-body');
+    const detailsBody = document.getElementById('snr-details-body');
+    
+    resultsEl.style.display = 'block';
+    
+    // Display best gain recommendation
+    if (data.summary && data.summary.bestGain !== undefined) {
+      bestGainEl.innerHTML = (t('SNR_BEST_GAIN') || 'Recommended Gain') + ': <strong>' + data.summary.bestGain + '</strong> ' +
+                            '(' + (t('SNR_AVG') || 'Avg SNR') + ': ' + data.summary.bestAvgSnr + ' dB)';
+    }
+    
+    // Display summary table
+    summaryBody.innerHTML = '';
+    if (data.summary && data.summary.byGain) {
+      data.summary.byGain.forEach(g => {
+        const tr = document.createElement('tr');
+        if (g.gain === data.summary.bestGain) {
+          tr.className = 'best-row';
+        }
+        tr.innerHTML = '<td>' + g.gain + '</td>' +
+                      '<td>' + g.minSnr.toFixed(2) + '</td>' +
+                      '<td>' + g.maxSnr.toFixed(2) + '</td>' +
+                      '<td>' + g.avgSnr.toFixed(2) + '</td>';
+        summaryBody.appendChild(tr);
+      });
+    }
+    
+    // Display detailed measurements
+    detailsBody.innerHTML = '';
+    if (data.measurements) {
+      // Sort by gain, then channel
+      const sorted = data.measurements.slice().sort((a, b) => {
+        if (a.gain !== b.gain) return a.gain - b.gain;
+        return a.channel.localeCompare(b.channel);
+      });
+      
+      sorted.forEach(m => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + m.gain + '</td>' +
+                      '<td>' + m.channel + '</td>' +
+                      '<td>' + m.peak.toFixed(2) + '</td>' +
+                      '<td>' + m.noise.toFixed(2) + '</td>' +
+                      '<td>' + m.snr.toFixed(2) + '</td>';
+        detailsBody.appendChild(tr);
+      });
+    }
+    
+    // Hide details by default
+    document.getElementById('snr-details').style.display = 'none';
+  }
+  
+  function toggleSnrDetails() {
+    const details = document.getElementById('snr-details');
+    const btn = document.querySelector('button[onclick="toggleSnrDetails()"]');
+    
+    if (details.style.display === 'none') {
+      details.style.display = 'block';
+      if (btn) btn.innerHTML = '<i class="fa fa-list"></i> ' + (t('SNR_HIDE_DETAILS') || 'Hide Details');
+    } else {
+      details.style.display = 'none';
+      if (btn) btn.innerHTML = '<i class="fa fa-list"></i> ' + (t('SNR_SHOW_DETAILS') || 'Show Details');
+    }
   }
   </script>
 </body>
