@@ -15,6 +15,12 @@ function findUdevadm() {
     "udevadm",
   ];
   for (const p of c) {
+    console.log(
+      "[tray-watcher] Checking udevadm path: " +
+        p +
+        " exists=" +
+        fs.existsSync(p)
+    );
     if (p === "udevadm") return p; // fallback last
     try {
       if (fs.existsSync(p)) return p;
@@ -61,6 +67,8 @@ function createTrayWatcher({
         // if the device is mid-transition, udevadm may hang; use timeout
         { timeout: 2000 },
         (err, stdout = "") => {
+          console.log("[tray-watcher] udevadm info stdout:", stdout);
+          console.log("[tray-watcher] udevadm info stderr:", err);
           if (err) return resolve(null);
           const outputObj = Object.fromEntries(
             stdout
@@ -69,6 +77,10 @@ function createTrayWatcher({
               .filter(Boolean)
               // slice handles cases where the value itself contains "=" characters
               .map((line) => line.split("=").slice(0, 2))
+          );
+          console.log(
+            "[tray-watcher] udevadm info output:",
+            JSON.stringify(outputObj, null, 2)
           );
           resolve(outputObj);
         }
@@ -86,8 +98,15 @@ function createTrayWatcher({
     const devname = (/DEVNAME=(.*)/.exec(text) || [])[1] || "";
     const ejectReq = (/DISK_EJECT_REQUEST=(.*)/.exec(text) || [])[1] || "";
     const isSr = /\/sr\d+$/.test(devname);
+    console.log(
+      `[tray-watcher] parsedRecord input:\n${text}\n` +
+        `  -> action=${head}, devname=${devname}, ejectReq=${ejectReq}, isSr=${isSr}`
+    );
     if (!isSr) return null;
     if (devBase && devname.replace(/^.*\//, "") !== devBase) return null;
+    console.log(
+      `[tray-watcher] parsedRecord: action=${head}, devname=${devname}, ejectReq=${ejectReq}`
+    );
     return { action: head, devname, ejectReq };
   }
 

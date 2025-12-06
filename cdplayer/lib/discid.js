@@ -18,6 +18,9 @@ const crypto = require("crypto");
  */
 
 function calculateMusicBrainzDiscId(cdDiscIdOutput) {
+  console.log(
+    "[discid] Calculating MusicBrainz Disc ID from output: " + cdDiscIdOutput
+  );
   if (!cdDiscIdOutput || typeof cdDiscIdOutput !== "string") {
     throw new Error("cdDiscIdOutput must be a non-empty string");
   }

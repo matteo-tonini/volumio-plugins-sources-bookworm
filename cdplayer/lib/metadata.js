@@ -15,7 +15,7 @@ const { calculateMusicBrainzDiscId } = require("./discid");
  */
 async function getDiscId() {
   const device = detectCdDevice();
-
+  console.log("[metadata] Detected CD device: " + device);
   try {
     // Run cd-discid with the MusicBrainz option to get an appropriate TOC format
     const { stdout } = await execFileAsync(
@@ -62,6 +62,9 @@ async function fetchMusicBrainzMetadata(discId) {
 
   try {
     const response = await fetch(url, { headers });
+    console.log(
+      "[metadata] MusicBrainz fetch response status: " + response.status
+    );
     if (!response.ok) {
       throw new Error(
         `MusicBrainz fetch failed with status ${response.status}`

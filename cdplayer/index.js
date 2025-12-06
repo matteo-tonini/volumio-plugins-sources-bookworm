@@ -51,6 +51,8 @@ cdplayer.prototype.error = function (err) {
 };
 
 cdplayer.prototype.onVolumioStart = function () {
+  var self = this;
+  self.log("onVolumioStart");
   var configFile = this.commandRouter.pluginManager.getConfigurationFile(
     this.context,
     "config.json"
@@ -64,18 +66,29 @@ cdplayer.prototype.onVolumioStart = function () {
 cdplayer.prototype.onStart = function () {
   var self = this;
   var defer = libQ.defer();
+  self.log("onStart");
   self.addToBrowseSources(DEFAULT_COVERART_URL);
 
+  self.log("onStart, starting Daemon service");
   execAsync(`sudo /bin/systemctl enable --now ${SERVICE_FILE}`)
     .then(() => self.log("Daemon service started"))
     .catch((err) => self.error("Failed to start Daemon: " + err.message))
     .finally(() => defer.resolve());
 
   try {
+    self.log(
+      "onStart, starting Tray watcher. Is running: " +
+        (self._trayWatcher ? self._trayWatcher.isRunning() : "no tray watcher")
+    );
     if (!self._trayWatcher || !self._trayWatcher.isRunning()) {
       const device = detectCdDevice();
+      self.log("Detected CD device: " + device);
       const trayConfig = getTrayWatcherConfiguration(self, device);
+      self.log(
+        "Tray watcher configuration: " + JSON.stringify(trayConfig, null, 2)
+      );
       self._trayWatcher = createTrayWatcher(trayConfig);
+      self.log("Starting Tray watcher");
       self._trayWatcher.start();
     }
   } catch (e) {
@@ -88,18 +101,23 @@ cdplayer.prototype.onStart = function () {
 cdplayer.prototype.onStop = function () {
   var self = this;
   var defer = libQ.defer();
-
+  self.log("onStop");
   self._items = null;
   self._discIdentifier = Date.now();
   self.removeToBrowseSources();
-
+  self.log("onStop, stopping Daemon service");
   execAsync(`sudo /bin/systemctl disable --now ${SERVICE_FILE}`)
     .then(() => self.log("Daemon service stopped"))
     .catch((err) => self.error("Failed to stop Daemon: " + err.message))
     .finally(() => defer.resolve());
 
-  if (this._trayWatcher) {
-    this._trayWatcher.stop();
+  self.log(
+    "onStop, stopping Tray watcher. trayWatcher: Is running: " +
+      (self._trayWatcher ? self._trayWatcher.isRunning() : "no tray watcher")
+  );
+  if (self._trayWatcher) {
+    self.log("Stopping existing Tray watcher");
+    self._trayWatcher.stop();
   }
   return defer.promise;
 };
@@ -110,18 +128,29 @@ cdplayer.prototype.onRestart = function () {
   self._items = null;
   self._discIdentifier = Date.now();
 
+  self.log("onRestart, restarting Daemon service");
   execAsync(`sudo /bin/systemctl restart ${SERVICE_FILE}`)
     .then(() => self.log("Daemon service restarted"))
     .catch((err) => self.error("Failed to restart Daemon: " + err.message))
     .finally(() => defer.resolve());
 
   try {
+    self.log(
+      "onRestart, restarting Tray watcher. IS running: " +
+        (self._trayWatcher ? self._trayWatcher.isRunning() : "no tray watcher")
+    );
     if (self._trayWatcher) {
+      self.log("Stopping existing Tray watcher");
       self._trayWatcher.stop();
     }
     const device = detectCdDevice();
+    self.log("Detected CD device: " + device);
     const trayConfig = getTrayWatcherConfiguration(self, device);
+    self.log(
+      "Tray watcher configuration: " + JSON.stringify(trayConfig, null, 2)
+    );
     self._trayWatcher = createTrayWatcher(trayConfig);
+    self.log("Starting Tray watcher");
     self._trayWatcher.start();
     self.log("Tray watcher restarted");
   } catch (e) {
@@ -178,7 +207,7 @@ cdplayer.prototype.setConf = function (varName, varValue) {
 // If your plugin is not a music_sevice don't use this part and delete it
 
 cdplayer.prototype.addToBrowseSources = function (albumart) {
-  this.log("Adding CDPlayer to Browse Sources");
+  const self = this;
   var data = {
     name: "CDPlayer",
     uri: "cdplayer",
@@ -186,18 +215,24 @@ cdplayer.prototype.addToBrowseSources = function (albumart) {
     plugin_name: "cdplayer",
     albumart,
   };
+  self.log(
+    "Adding CDPlayer to Browse Sources wirth albumart: " +
+      JSON.stringify(data, null, 2)
+  );
   this.commandRouter.volumioAddToBrowseSources(data);
 };
 
 cdplayer.prototype.removeToBrowseSources = function () {
-  this.log("Removing CDPlayer from Browse Sources");
-  this.commandRouter.volumioRemoveToBrowseSources("CDPlayer");
+  const self = this;
+  self.log("Removing CDPlayer from Browse Sources");
+  self.commandRouter.volumioRemoveToBrowseSources("CDPlayer");
 };
 
 cdplayer.prototype.handleBrowseUri = function (curUri) {
   const self = this;
 
   if (curUri !== "cdplayer") {
+    self.log("handleBrowseUri called with non-cdplayer URI: " + curUri);
     return libQ.resolve(null);
   }
 
@@ -233,16 +268,18 @@ cdplayer.prototype.handleBrowseUri = function (curUri) {
       }
 
       const meta = await fetchCdMetadata();
-
+      self.log("Fetched CD metadata: " + JSON.stringify(meta, null, 2));
       let decoratedItems = items;
       if (meta) {
         // eg. https://coverartarchive.org/release/2174675c-2159-4405-a3af-3a4860106b58/front
         const albumart = await getAlbumartUrl(meta.releaseId);
+        self.log("Fetched album art URL: " + JSON.stringify(albumart, null, 2));
         decoratedItems = decorateItems(
           items,
           meta,
           albumart || DEFAULT_COVERART_URL
         );
+        self.log("Updating browse sources with new album art");
         self.removeToBrowseSources();
         self.addToBrowseSources(albumart || DEFAULT_COVERART_URL);
       } else {
@@ -254,8 +291,12 @@ cdplayer.prototype.handleBrowseUri = function (curUri) {
         decoratedItems,
         self._discIdentifier
       );
+      self.log("Applied disc identifier to items");
 
       self._items = itemsWithDiscUri;
+      self.log(
+        "Updated internal items cache" + JSON.stringify(self._items, null, 2)
+      );
 
       return {
         navigation: {
@@ -291,14 +332,17 @@ cdplayer.prototype.explodeUri = function (uri) {
   const match = uri.match(/^cdplayer\/(\d+)(?:\?.*)?$/);
   if (match) {
     const n = parseInt(match[1], 10);
+    self.log("explodeUri called with track number: " + n);
     const track = {
       ...self._items[n - 1],
       service: "mpd",
       uri: `${CD_HTTP_BASE_URL}${n}?disc=${self._discIdentifier}`,
     };
-
+    self.log("Exploding URI to track: " + JSON.stringify(track, null, 2));
     defer.resolve([track]);
     return defer.promise;
+  } else {
+    self.log("explodeUri called with invalid URI: " + uri);
   }
 
   defer.resolve([]);
@@ -364,7 +408,7 @@ function retryFetchMetadata(items, self) {
   pRetry(
     async () => {
       const meta = await fetchCdMetadata();
-
+      self.log("Fetched CD metadata: " + JSON.stringify(meta, null, 2));
       if (!meta) {
         // If null, we force a retry
         throw new Error("CD metadata unavailable");
@@ -372,15 +416,23 @@ function retryFetchMetadata(items, self) {
 
       // If metadata retrieved:
       const albumart = await getAlbumartUrl(meta.releaseId);
+      self.log("Fetched album art URL: " + JSON.stringify(albumart, null, 2));
       const decoratedItems = decorateItems(
         items,
         meta,
         albumart || DEFAULT_COVERART_URL
       );
+      self.log(
+        "Updating browse sources with new album art: " +
+          (albumart || DEFAULT_COVERART_URL)
+      );
       self.removeToBrowseSources();
       self.addToBrowseSources(albumart || DEFAULT_COVERART_URL);
 
       self._items = applyDiscIdToItems(decoratedItems, self._discIdentifier);
+      self.log(
+        "Updated internal items cache" + JSON.stringify(self._items, null, 2)
+      );
     },
     {
       delay: 700,

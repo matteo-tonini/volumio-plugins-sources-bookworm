@@ -10,6 +10,7 @@ const fs = require("fs");
  * @returns {string} The path to the detected CD device, or `"/dev/sr0"` if none are found.
  */
 function detectCdDevice() {
+  console.log("[CDplayer utils] Detecting CD device...");
   const envDev = process.env.CD_DEVICE;
   try {
     if (envDev && fs.existsSync(envDev)) return envDev;
@@ -25,6 +26,12 @@ function detectCdDevice() {
   ];
   for (const p of candidates) {
     try {
+      console.log(
+        "[CDplayer utils] Checking device path: " +
+          p +
+          " exists=" +
+          fs.existsSync(p)
+      );
       if (fs.existsSync(p)) return p;
     } catch (e) {
       // ignore and continue
@@ -108,8 +115,11 @@ function parseDurationsFromQ(out) {
 async function listCD() {
   try {
     const out = await runCdparanoiaQ();
+    console.log("[CDplayer utils]  -Q output:\n" + out);
     const durations = parseDurationsFromQ(out);
-
+    console.log(
+      "[CDplayer utils] Parsed durations: " + JSON.stringify(durations, null, 2)
+    );
     let items = [];
     for (const [trackNumber, duration] of Object.entries(durations)) {
       items.push({
@@ -124,6 +134,9 @@ async function listCD() {
         duration,
       });
     }
+    console.log(
+      "[CDplayer utils] Created track items: " + JSON.stringify(items, null, 2)
+    );
     return items;
   } catch (err) {
     throw err;
@@ -268,7 +281,12 @@ function applyDiscIdToItems(items, discId) {
     // item.uri is "cdplayer/3" or "cdplayer/3?something"
     // We always append &disc= if there's already a query param
     const separator = item.uri.includes("?") ? "&" : "?";
-
+    console.log(
+      "[CDplayer utils] Applying discId to item URI: " +
+        item.uri +
+        " -> " +
+        `${item.uri}${separator}disc=${discId}`
+    );
     return {
       ...item,
       uri: `${item.uri}${separator}disc=${discId}`,
