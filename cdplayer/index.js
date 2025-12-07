@@ -22,7 +22,7 @@ module.exports = cdplayer;
 const SERVICE_FILE = "cdplayer_stream.service";
 const CD_HTTP_BASE_URL = "http://127.0.0.1:8088/wav/track/";
 const DEFAULT_COVERART_URL =
-  "/albumart?sourceicon=music_service/cdplayer/cdplayer.png";
+  "/albumart?sourceicon=music_service/cdplayer/assets/cdplayer.png";
 const ejectItem = {
   title: "",
   icon: "fa fa-eject",
@@ -238,7 +238,18 @@ cdplayer.prototype.handleBrowseUri = function (curUri) {
 
   const p = (async () => {
     try {
-      const items = await listCD();
+      const items = await pRetry(
+        async (attempt) => {
+          self.log(`Attempt #${attempt} to list CD tracks`);
+          return await listCD();
+        },
+        {
+          maxAttempts: 3,
+          logger: self,
+          delay: 2000,
+          delayMultiplier: 1.5,
+        }
+      );
 
       if (items.length === 0) {
         self.error("No audio tracks returned");

@@ -122,6 +122,8 @@ async function listCD() {
         service: "cdplayer",
         uri: `cdplayer/${trackNumber}`,
         duration,
+        albumart:
+          "/albumart?sourceicon=music_service/cdplayer/assets/track.png",
       });
     }
     return items;
