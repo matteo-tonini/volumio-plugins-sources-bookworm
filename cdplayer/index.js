@@ -84,9 +84,9 @@ cdplayer.prototype.onStart = function () {
       const device = detectCdDevice();
       self.log("Detected CD device: " + device);
       const trayConfig = getTrayWatcherConfiguration(self, device);
-      self.log(
-        "Tray watcher configuration: " + JSON.stringify(trayConfig, null, 2)
-      );
+      // self.log(
+      //   "Tray watcher configuration: " + JSON.stringify(trayConfig, null, 2)
+      // );
       self._trayWatcher = createTrayWatcher(trayConfig);
       self.log("Starting Tray watcher");
       self._trayWatcher.start();
