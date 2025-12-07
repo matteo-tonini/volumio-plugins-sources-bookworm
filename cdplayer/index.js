@@ -23,6 +23,20 @@ const SERVICE_FILE = "cdplayer_stream.service";
 const CD_HTTP_BASE_URL = "http://127.0.0.1:8088/wav/track/";
 const DEFAULT_COVERART_URL =
   "/albumart?sourceicon=music_service/cdplayer/cdplayer.png";
+const ejectItem = {
+  title: "",
+  icon: "fa fa-eject",
+  availableListViews: ["list"],
+  items: [
+    {
+      title: "Eject",
+      service: "cdplayer",
+      icon: "fa fa-eject",
+      type: "item-no-menu",
+      uri: "cdplayer/eject",
+    },
+  ],
+};
 
 function cdplayer(context) {
   var self = this;
@@ -197,7 +211,10 @@ cdplayer.prototype.removeToBrowseSources = function () {
 cdplayer.prototype.handleBrowseUri = function (curUri) {
   const self = this;
 
-  if (curUri !== "cdplayer") {
+  if (curUri === "cdplayer/eject") {
+    // TODO: implement a proper eject function
+    self.log("Ejecting CD tray ...");
+  } else if (curUri !== "cdplayer") {
     return libQ.resolve(null);
   }
 
@@ -213,6 +230,7 @@ cdplayer.prototype.handleBrowseUri = function (curUri) {
             availableListViews: ["list"],
             items: self._items,
           },
+          ejectItem,
         ],
       },
     });
@@ -256,7 +274,6 @@ cdplayer.prototype.handleBrowseUri = function (curUri) {
       );
 
       self._items = itemsWithDiscUri;
-
       return {
         navigation: {
           prev: { uri: "cdplayer" },
@@ -267,11 +284,13 @@ cdplayer.prototype.handleBrowseUri = function (curUri) {
               availableListViews: ["list"],
               items: itemsWithDiscUri,
             },
+            ejectItem,
           ],
         },
       };
     } catch (err) {
       self.error(`Error while listing CD tracks`);
+      console.error(err);
       self.commandRouter.pushToastMessage(
         "error",
         "CD Player",
@@ -287,6 +306,12 @@ cdplayer.prototype.handleBrowseUri = function (curUri) {
 cdplayer.prototype.explodeUri = function (uri) {
   const self = this;
   const defer = libQ.defer();
+
+  if (uri === "cdplayer/eject") {
+    self.log("Ejecting CD tray ...");
+    defer.resolve([]);
+    return defer.promise;
+  }
 
   const match = uri.match(/^cdplayer\/(\d+)(?:\?.*)?$/);
   if (match) {
@@ -390,10 +415,10 @@ function retryFetchMetadata(items, self) {
     }
   ).catch((err) => {
     // This is ONLY the last retry failure.
-    self.error(
-      "CD metadata fetch failed after retries: " +
-        (err && err.stack ? err.stack : err)
-    );
+    // self.error(
+    //   "CD metadata fetch failed after retries: " +
+    //     (err && err.stack ? err.stack : err)
+    // );
     // Do NOT rethrow – swallow the error so the plugin continues
   });
 }
