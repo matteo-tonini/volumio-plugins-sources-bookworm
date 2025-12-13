@@ -225,4 +225,43 @@ function createTrayWatcher({
   return { start, stop, isRunning: () => !!proc };
 }
 
-module.exports = { createTrayWatcher };
+/**
+ * Handle tray eject event.
+ * Keeps side effects identical to previous inline implementation.
+ * @param {any} self Plugin instance
+ */
+function onEject(self, baseUrl, defaultCoverArt) {
+  self.log("Eject detected ... ");
+  // Drop CD track cache so next browse forces a re-scan
+  self._items = null;
+  // Bump disc identifier to avoid caching issues
+  self._discIdentifier = Date.now();
+
+  try {
+    const state = self.commandRouter.volumioGetState();
+
+    const isCdStream =
+      state &&
+      state.service === "mpd" &&
+      typeof state.uri === "string" &&
+      state.uri.indexOf(baseUrl) === 0;
+
+    if (isCdStream) {
+      self.log("Stopping CD playback due to eject event");
+      self.commandRouter.volumioStop();
+      self.commandRouter.volumioClearQueue();
+    }
+  } catch (e) {
+    self.log("Error stopping playback on eject: " + e.message);
+  }
+
+  // Refresh browse source so albumart resets to the default icon
+  try {
+    self.removeToBrowseSources();
+    self.addToBrowseSources(defaultCoverArt);
+  } catch (e) {
+    self.log("Error refreshing browse sources after eject: " + e.message);
+  }
+}
+
+module.exports = { createTrayWatcher, onEject };

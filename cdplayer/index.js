@@ -6,13 +6,14 @@ const {
   pRetry,
   detectCdDevice,
   applyDiscIdToItems,
+  ejectTray,
 } = require("./lib/utils");
 const {
   fetchCdMetadata,
   decorateItems,
   getAlbumartUrl,
 } = require("./lib/metadata");
-const { createTrayWatcher } = require("./lib/tray-watcher");
+const { createTrayWatcher, onEject } = require("./lib/tray-watcher");
 const { promisify } = require("util");
 const { exec } = require("child_process");
 const execAsync = promisify(exec);
@@ -212,8 +213,17 @@ cdplayer.prototype.handleBrowseUri = function (curUri) {
   const self = this;
 
   if (curUri === "cdplayer/eject") {
-    // TODO: implement a proper eject function
     self.log("Ejecting CD tray ...");
+    const p = (async () => {
+      await ejectTray(self);
+      return {
+        navigation: {
+          prev: { uri: "cdplayer" },
+          lists: [ejectItem],
+        },
+      };
+    })();
+    return toKew(p);
   } else if (curUri !== "cdplayer") {
     return libQ.resolve(null);
   }
@@ -466,37 +476,7 @@ function getTrayWatcherConfiguration(self, device) {
     device,
     onEvent: function () {},
     onEject: function () {
-      self.log("Eject detected ... ");
-      // Drop CD track cache so next browse forces a re-scan
-      self._items = null;
-      // Bump disc identifier to avoid caching issues
-      self._discIdentifier = Date.now();
-
-      try {
-        const state = self.commandRouter.volumioGetState();
-
-        const isCdStream =
-          state &&
-          state.service === "mpd" &&
-          typeof state.uri === "string" &&
-          state.uri.indexOf(CD_HTTP_BASE_URL) === 0;
-
-        if (isCdStream) {
-          self.log("Stopping CD playback due to eject event");
-          self.commandRouter.volumioStop();
-          self.commandRouter.volumioClearQueue();
-        }
-      } catch (e) {
-        self.log("Error stopping playback on eject: " + e.message);
-      }
-
-      // Refresh browse source so albumart resets to the default icon
-      try {
-        self.removeToBrowseSources();
-        self.addToBrowseSources(DEFAULT_COVERART_URL);
-      } catch (e) {
-        self.log("Error refreshing browse sources after eject: " + e.message);
-      }
+      return onEject(self, CD_HTTP_BASE_URL, DEFAULT_COVERART_URL);
     },
   };
 }
