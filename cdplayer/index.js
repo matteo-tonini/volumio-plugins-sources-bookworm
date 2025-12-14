@@ -450,10 +450,6 @@ function retryFetchMetadata(items, self) {
     }
   ).catch((err) => {
     // This is ONLY the last retry failure.
-    // self.error(
-    //   "CD metadata fetch failed after retries: " +
-    //     (err && err.stack ? err.stack : err)
-    // );
     // Do NOT rethrow – swallow the error so the plugin continues
   });
 }
