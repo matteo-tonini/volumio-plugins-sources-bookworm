@@ -13,6 +13,7 @@ const {
   decorateItems,
   getAlbumartUrl,
 } = require("./lib/metadata");
+const { getSocket } = require("./lib/socket");
 const { createTrayWatcher, onEject } = require("./lib/tray-watcher");
 const { promisify } = require("util");
 const { exec } = require("child_process");
@@ -79,6 +80,19 @@ cdplayer.prototype.onVolumioStart = function () {
 cdplayer.prototype.onStart = function () {
   var self = this;
   var defer = libQ.defer();
+  self.socket = getSocket();
+  self.socket.on("connect", () => {
+    self.log("[web-socket] connected");
+  });
+  self.socket.on("disconnect", (reason) => {
+    self.log("[web-socket] disconnected: " + reason);
+  });
+  self.socket.on("connect_error", (err) => {
+    self.log("[web-socket] connect error: " + err.message);
+  });
+  self.socket.on("error", (err) => {
+    self.log("[web-socket] error: " + err);
+  });
   self.addToBrowseSources(DEFAULT_COVERART_URL);
 
   execAsync(`sudo /bin/systemctl enable --now ${SERVICE_FILE}`)

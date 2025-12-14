@@ -1,7 +1,7 @@
 /// <reference path="../types.js" />
 const fs = require("fs");
 const { spawn, execFile } = require("child_process");
-
+const { safeEmit } = require("./socket");
 /**
  * Try to locate the system `udevadm` binary across common paths.
  * @returns {string} Full path or "udevadm" fallback
@@ -249,8 +249,14 @@ function onEject(self, baseUrl, defaultCoverArt) {
     if (isCdStream) {
       self.log("Stopping CD playback due to eject event");
       self.commandRouter.volumioStop();
-      self.commandRouter.volumioClearQueue();
     }
+
+    const queue = self.commandRouter.volumioGetQueue();
+    queue.forEach((item) => {
+      if (item.uri.indexOf(baseUrl) === 0) {
+        safeEmit(self, "removeFromQueue", { uri: item.uri });
+      }
+    });
   } catch (e) {
     self.log("Error stopping playback on eject: " + e.message);
   }
