@@ -17,6 +17,7 @@ declare class CDPlayer {
     constructor(context: any);
     log(msg: string): void;
     error(err: string): void;
+    onStart(): any;
 }
 export = CDPlayer;
 //# sourceMappingURL=index.d.ts.map

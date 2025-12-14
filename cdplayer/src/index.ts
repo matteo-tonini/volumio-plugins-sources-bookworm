@@ -1,22 +1,5 @@
-"use strict";
-var libQ = require("kew");
-const {
-  listCD,
-  pRetry,
-  detectCdDevice,
-  applyDiscIdToItems,
-  ejectTray,
-} = require("../lib/utils");
-const {
-  fetchCdMetadata,
-  decorateItems,
-  getAlbumartUrl,
-} = require("../lib/metadata");
-const { getSocket } = require("../lib/socket");
-const { createTrayWatcher, onEject } = require("../lib/tray-watcher");
-const { promisify } = require("util");
-const { exec } = require("child_process");
-const execAsync = promisify(exec);
+// @ts-ignore
+import libQ from "kew";
 
 interface CDTrack {
   album: string;
@@ -58,6 +41,11 @@ class CDPlayer {
 
   error(err: string) {
     this.#logger.error(`[CDPlayer]: ${err}`);
+  }
+
+  onStart() {
+    this.log("Starting CD Player plugin");
+    return libQ.resolve();
   }
 }
 

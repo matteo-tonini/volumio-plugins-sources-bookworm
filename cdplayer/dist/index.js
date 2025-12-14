@@ -10,15 +10,12 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 var _CDPlayer_context, _CDPlayer_config, _CDPlayer_logger, _CDPlayer_commandRouter, _CDPlayer_configManager;
-var libQ = require("kew");
-const { listCD, pRetry, detectCdDevice, applyDiscIdToItems, ejectTray, } = require("../lib/utils");
-const { fetchCdMetadata, decorateItems, getAlbumartUrl, } = require("../lib/metadata");
-const { getSocket } = require("../lib/socket");
-const { createTrayWatcher, onEject } = require("../lib/tray-watcher");
-const { promisify } = require("util");
-const { exec } = require("child_process");
-const execAsync = promisify(exec);
+// @ts-ignore
+const kew_1 = __importDefault(require("kew"));
 class CDPlayer {
     constructor(context) {
         _CDPlayer_context.set(this, void 0);
@@ -42,6 +39,10 @@ class CDPlayer {
     }
     error(err) {
         __classPrivateFieldGet(this, _CDPlayer_logger, "f").error(`[CDPlayer]: ${err}`);
+    }
+    onStart() {
+        this.log("Starting CD Player plugin");
+        return kew_1.default.resolve();
     }
 }
 _CDPlayer_context = new WeakMap(), _CDPlayer_config = new WeakMap(), _CDPlayer_logger = new WeakMap(), _CDPlayer_commandRouter = new WeakMap(), _CDPlayer_configManager = new WeakMap();
