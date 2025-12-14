@@ -2,6 +2,9 @@
 
 const { execFile } = require("child_process");
 const fs = require("fs");
+const { promisify } = require("util");
+const { exec } = require("child_process");
+const execAsync = promisify(exec);
 
 /**
  * Detects the CD device path available on the system.
@@ -122,6 +125,8 @@ async function listCD() {
         service: "cdplayer",
         uri: `cdplayer/${trackNumber}`,
         duration,
+        albumart:
+          "/albumart?sourceicon=music_service/cdplayer/assets/track.png",
       });
     }
     return items;
@@ -276,7 +281,73 @@ function applyDiscIdToItems(items, discId) {
   });
 }
 
+/**
+ * Try to physically eject the CD tray.
+ * Uses detectCdDevice() to find the drive and tries a couple of command variants.
+ *
+ * This function never throws – it logs errors and returns a boolean.
+ *
+ * @param {any} self Plugin instance
+ * @returns {Promise<boolean>} true on (likely) success, false on failure
+ */
+async function ejectTray(self) {
+  const device = detectCdDevice();
+  self.log(`Eject requested for device ${device}`);
+
+  // We try a few reasonable variants; some systems don't need sudo,
+  // some don't care about the explicit device.
+  const commands = [
+    `eject ${device}`,
+    `eject`,
+    `sudo eject ${device}`,
+    `sudo eject`,
+  ];
+
+  let success = false;
+  let lastError = null;
+
+  for (const cmd of commands) {
+    try {
+      self.log(`Trying eject command: ${cmd}`);
+      const { stdout, stderr } = await execAsync(cmd);
+
+      if (stdout && stdout.trim()) {
+        self.log(`eject stdout: ${stdout.trim()}`);
+      }
+      if (stderr && stderr.trim()) {
+        self.log(`eject stderr: ${stderr.trim()}`);
+      }
+
+      success = true;
+      break;
+    } catch (err) {
+      lastError = err;
+      self.error(`Eject command failed ("${cmd}"): ${err.message}`);
+    }
+  }
+
+  if (success) {
+    self.commandRouter.pushToastMessage(
+      "success",
+      "CD Player",
+      "CD tray ejected"
+    );
+  } else {
+    const msg =
+      "Unable to eject CD tray from software. Please eject it manually.";
+    if (lastError) {
+      self.error(msg + " Last error: " + lastError.message);
+    } else {
+      self.error(msg);
+    }
+    self.commandRouter.pushToastMessage("error", "CD Player", msg);
+  }
+
+  return success;
+}
+
 module.exports = {
+  ejectTray,
   pRetry,
   listCD,
   detectCdDevice,

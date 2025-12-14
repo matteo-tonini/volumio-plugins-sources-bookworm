@@ -6,13 +6,15 @@ const {
   pRetry,
   detectCdDevice,
   applyDiscIdToItems,
+  ejectTray,
 } = require("./lib/utils");
 const {
   fetchCdMetadata,
   decorateItems,
   getAlbumartUrl,
 } = require("./lib/metadata");
-const { createTrayWatcher } = require("./lib/tray-watcher");
+const { getSocket } = require("./lib/socket");
+const { createTrayWatcher, onEject } = require("./lib/tray-watcher");
 const { promisify } = require("util");
 const { exec } = require("child_process");
 const execAsync = promisify(exec);
@@ -22,7 +24,21 @@ module.exports = cdplayer;
 const SERVICE_FILE = "cdplayer_stream.service";
 const CD_HTTP_BASE_URL = "http://127.0.0.1:8088/wav/track/";
 const DEFAULT_COVERART_URL =
-  "/albumart?sourceicon=music_service/cdplayer/cdplayer.png";
+  "/albumart?sourceicon=music_service/cdplayer/assets/cdplayer.png";
+const ejectItem = {
+  title: "",
+  icon: "fa fa-eject",
+  availableListViews: ["list"],
+  items: [
+    {
+      title: "Eject",
+      service: "cdplayer",
+      icon: "fa fa-eject",
+      type: "item-no-menu",
+      uri: "cdplayer/eject",
+    },
+  ],
+};
 
 function cdplayer(context) {
   var self = this;
@@ -64,6 +80,19 @@ cdplayer.prototype.onVolumioStart = function () {
 cdplayer.prototype.onStart = function () {
   var self = this;
   var defer = libQ.defer();
+  self.socket = getSocket();
+  self.socket.on("connect", () => {
+    self.log("[web-socket] connected");
+  });
+  self.socket.on("disconnect", (reason) => {
+    self.log("[web-socket] disconnected: " + reason);
+  });
+  self.socket.on("connect_error", (err) => {
+    self.log("[web-socket] connect error: " + err.message);
+  });
+  self.socket.on("error", (err) => {
+    self.log("[web-socket] error: " + err);
+  });
   self.addToBrowseSources(DEFAULT_COVERART_URL);
 
   execAsync(`sudo /bin/systemctl enable --now ${SERVICE_FILE}`)
@@ -197,7 +226,19 @@ cdplayer.prototype.removeToBrowseSources = function () {
 cdplayer.prototype.handleBrowseUri = function (curUri) {
   const self = this;
 
-  if (curUri !== "cdplayer") {
+  if (curUri === "cdplayer/eject") {
+    self.log("Ejecting CD tray ...");
+    const p = (async () => {
+      await ejectTray(self);
+      return {
+        navigation: {
+          prev: { uri: "cdplayer" },
+          lists: [ejectItem],
+        },
+      };
+    })();
+    return toKew(p);
+  } else if (curUri !== "cdplayer") {
     return libQ.resolve(null);
   }
 
@@ -213,6 +254,7 @@ cdplayer.prototype.handleBrowseUri = function (curUri) {
             availableListViews: ["list"],
             items: self._items,
           },
+          ejectItem,
         ],
       },
     });
@@ -220,7 +262,18 @@ cdplayer.prototype.handleBrowseUri = function (curUri) {
 
   const p = (async () => {
     try {
-      const items = await listCD();
+      const items = await pRetry(
+        async (attempt) => {
+          self.log(`Attempt #${attempt} to list CD tracks`);
+          return await listCD();
+        },
+        {
+          maxAttempts: 3,
+          logger: self,
+          delay: 2000,
+          delayMultiplier: 1.5,
+        }
+      );
 
       if (items.length === 0) {
         self.error("No audio tracks returned");
@@ -256,7 +309,6 @@ cdplayer.prototype.handleBrowseUri = function (curUri) {
       );
 
       self._items = itemsWithDiscUri;
-
       return {
         navigation: {
           prev: { uri: "cdplayer" },
@@ -267,11 +319,13 @@ cdplayer.prototype.handleBrowseUri = function (curUri) {
               availableListViews: ["list"],
               items: itemsWithDiscUri,
             },
+            ejectItem,
           ],
         },
       };
     } catch (err) {
       self.error(`Error while listing CD tracks`);
+      console.error(err);
       self.commandRouter.pushToastMessage(
         "error",
         "CD Player",
@@ -287,6 +341,12 @@ cdplayer.prototype.handleBrowseUri = function (curUri) {
 cdplayer.prototype.explodeUri = function (uri) {
   const self = this;
   const defer = libQ.defer();
+
+  if (uri === "cdplayer/eject") {
+    self.log("Ejecting CD tray ...");
+    defer.resolve([]);
+    return defer.promise;
+  }
 
   const match = uri.match(/^cdplayer\/(\d+)(?:\?.*)?$/);
   if (match) {
@@ -390,10 +450,6 @@ function retryFetchMetadata(items, self) {
     }
   ).catch((err) => {
     // This is ONLY the last retry failure.
-    self.error(
-      "CD metadata fetch failed after retries: " +
-        (err && err.stack ? err.stack : err)
-    );
     // Do NOT rethrow – swallow the error so the plugin continues
   });
 }
@@ -430,37 +486,7 @@ function getTrayWatcherConfiguration(self, device) {
     device,
     onEvent: function () {},
     onEject: function () {
-      self.log("Eject detected ... ");
-      // Drop CD track cache so next browse forces a re-scan
-      self._items = null;
-      // Bump disc identifier to avoid caching issues
-      self._discIdentifier = Date.now();
-
-      try {
-        const state = self.commandRouter.volumioGetState();
-
-        const isCdStream =
-          state &&
-          state.service === "mpd" &&
-          typeof state.uri === "string" &&
-          state.uri.indexOf(CD_HTTP_BASE_URL) === 0;
-
-        if (isCdStream) {
-          self.log("Stopping CD playback due to eject event");
-          self.commandRouter.volumioStop();
-          self.commandRouter.volumioClearQueue();
-        }
-      } catch (e) {
-        self.log("Error stopping playback on eject: " + e.message);
-      }
-
-      // Refresh browse source so albumart resets to the default icon
-      try {
-        self.removeToBrowseSources();
-        self.addToBrowseSources(DEFAULT_COVERART_URL);
-      } catch (e) {
-        self.log("Error refreshing browse sources after eject: " + e.message);
-      }
+      return onEject(self, CD_HTTP_BASE_URL, DEFAULT_COVERART_URL);
     },
   };
 }
